@@ -46,9 +46,9 @@ const DishCard = ({
         <p className="text-white/70 text-sm mb-3 line-clamp-2">{dish.description}</p>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <p className="text-lg font-bold text-white">{dish.price}</p>
+            <p className="text-lg font-bold text-white"> {dish.price}   ج م </p>
             {dish.original_price && (
-              <p className="text-sm text-white/40 line-through">{dish.original_price}</p>
+              <p className="text-sm text-white/40 line-through">{dish.original_price} ج م</p>
             )}
           </div>
           {showAddButton && (

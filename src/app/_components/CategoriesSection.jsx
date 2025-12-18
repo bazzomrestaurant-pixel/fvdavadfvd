@@ -4,10 +4,16 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import HorizontalScrollContainer from './HorizontalScrollContainer';
-
-
+import { useRouter } from 'next/navigation';
 
 const CategoriesSection = ({categories}) => {
+  const router = useRouter();
+
+  const handleCategoryClick = (categoryName) => {
+    // تمرير اسم القسم كـ query parameter
+    router.push(`/menu?category=${encodeURIComponent(categoryName)}`);
+  };
+
   return (
     <section className="py-4 md:py-6 px-4 bg-linear-to-b from-zinc-900 via-zinc-900 to-black">
       <div className="max-w-7xl mx-auto">
@@ -24,22 +30,26 @@ const CategoriesSection = ({categories}) => {
         <div className="hidden md:flex justify-center">
           <div className="flex flex-wrap justify-center gap-4 max-w-4xl">
             {categories.map((category) => (
-              <div key={category.id} className="cursor-pointer">
-                <Link href={'/menu'}>
-                  <div className="bg-black/40 rounded-xl p-1.5 border border-[#C49A6C]/20 transition-all w-20 hover:border-[#C49A6C]">
-                    <div className="relative w-16 h-16 rounded-full overflow-hidden mb-1.5 bg-zinc-800 border border-[#C49A6C]/30 mx-auto">
-                      <Image
-                        src={category.image_url}
-                        alt={category.name_ar}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <h3 className="text-center text-[10px] font-semibold text-white transition-colors leading-tight hover:text-[#C49A6C]">
-                      {category.name_ar}
-                    </h3>
+              <div 
+                key={category.id} 
+                className="cursor-pointer"
+                onClick={() => handleCategoryClick(category.name_en || category.name)}
+              >
+                <div className="bg-black/40 rounded-xl p-1.5 border border-[#C49A6C]/20 transition-all w-20 hover:border-[#C49A6C]">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden mb-1.5 bg-zinc-800 border border-[#C49A6C]/30 mx-auto">
+                    <Image
+                      src={category.image_url}
+                      alt={category.name_ar}
+                      fill
+                      sizes="true"
+                      property="true"
+                      className="object-cover"
+                    />
                   </div>
-                </Link>
+                  <h3 className="text-center text-[10px] font-semibold text-white transition-colors leading-tight hover:text-[#C49A6C]">
+                    {category.name_ar}
+                  </h3>
+                </div>
               </div>
             ))}
           </div>
@@ -53,23 +63,23 @@ const CategoriesSection = ({categories}) => {
                 key={category.id}
                 className="cursor-pointer shrink-0 group"
                 style={{ minWidth: '90px', maxWidth: '90px' }}
+                onClick={() => handleCategoryClick(category.name_en || category.name)}
               >
-                <Link href={'/menu'}>
-                  <div className="bg-black/40 rounded-xl p-1.5 border border-[#C49A6C]/20 transition-all group-hover:border-[#C49A6C]">
-                    <div className="relative w-16 h-16 rounded-full overflow-hidden mb-1.5 bg-zinc-800 border border-[#C49A6C]/30 mx-auto">
-                      <Image
-                        src={category.image_url}
-                        alt={category.name_ar}
-                        fill
-                        priority={true}   
-                        className="object-cover"
-                      />
-                    </div>
-                    <h3 className="text-center text-[10px] font-semibold text-white transition-colors leading-tight group-hover:text-[#C49A6C]">
-                      {category.name_ar}
-                    </h3>
+                <div className="bg-black/40 rounded-xl p-1.5 border border-[#C49A6C]/20 transition-all group-hover:border-[#C49A6C]">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden mb-1.5 bg-zinc-800 border border-[#C49A6C]/30 mx-auto">
+                    <Image
+                      src={category.image_url}
+                      alt={category.name_ar}
+                      fill
+                      priority={true} 
+                      sizes="true"  
+                      className="object-cover"
+                    />
                   </div>
-                </Link>
+                  <h3 className="text-center text-[10px] font-semibold text-white transition-colors leading-tight group-hover:text-[#C49A6C]">
+                    {category.name_ar}
+                  </h3>
+                </div>
               </div>
             ))}
           </HorizontalScrollContainer>

@@ -1,3 +1,4 @@
+
 // import { useState } from "react";
 // import { useMutation, useQueryClient } from "@tanstack/react-query";
 // import { adminApi } from "../../../_services/adminApi";
@@ -10,6 +11,8 @@
 //     subtitle: editingItem?.subtitle || "",
 //     description: editingItem?.description || "",
 //     name: editingItem?.name || "",
+//     name_ar: editingItem?.name_ar || "",
+//     name_en: editingItem?.name_en || "",
 //     price: editingItem?.price || "",
 //     original_price: editingItem?.original_price || "",
 //     button_text: editingItem?.button_text || "",
@@ -21,7 +24,7 @@
 //   });
 
 //   const [imageFile, setImageFile] = useState(null);
-//   const [imagePreview, setImagePreview] = useState(editingItem?.image || "");
+//   const [imagePreview, setImagePreview] = useState(editingItem?.image || editingItem?.image_url || "");
 //   const queryClient = useQueryClient();
 
 //   // Handle image upload
@@ -63,6 +66,15 @@
 //     },
 //   });
 
+//   const createCategoryMutation = useMutation({
+//     mutationFn: (data) => adminApi.categories.createCategory(data, imageFile),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries(["categories"]);
+//       toast.success("تم إضافة التصنيف بنجاح!");
+//       onClose();
+//     },
+//   });
+
 //   // Update mutations
 //   const updateSlideMutation = useMutation({
 //     mutationFn: ({ id, data }) =>
@@ -94,6 +106,16 @@
 //     },
 //   });
 
+//   const updateCategoryMutation = useMutation({
+//     mutationFn: ({ id, data }) =>
+//       adminApi.categories.updateCategory(id, data, imageFile),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries(["categories"]);
+//       toast.success("تم تحديث التصنيف بنجاح!");
+//       onClose();
+//     },
+//   });
+
 //   const handleSubmit = (e) => {
 //     e.preventDefault();
 
@@ -109,6 +131,9 @@
 //         case "offers":
 //           updateOfferMutation.mutate({ id: editingItem.id, data: formData });
 //           break;
+//         case "categories":
+//           updateCategoryMutation.mutate({ id: editingItem.id, data: formData });
+//           break;
 //       }
 //     } else {
 //       // Create new item
@@ -122,6 +147,9 @@
 //         case "offers":
 //           createOfferMutation.mutate(formData);
 //           break;
+//         case "categories":
+//           createCategoryMutation.mutate(formData);
+//           break;
 //       }
 //     }
 //   };
@@ -130,14 +158,22 @@
 //     createSlideMutation.isPending ||
 //     createDishMutation.isPending ||
 //     createOfferMutation.isPending ||
+//     createCategoryMutation.isPending ||
 //     updateSlideMutation.isPending ||
 //     updateDishMutation.isPending ||
-//     updateOfferMutation.isPending;
+//     updateOfferMutation.isPending ||
+//     updateCategoryMutation.isPending;
 
 //   const getModalTitle = () => {
 //     const action = editingItem ? "تعديل" : "إضافة";
 //     const itemType =
-//       type === "slides" ? "شريحة" : type === "dishes" ? "طبق مميز" : "عرض";
+//       type === "slides" 
+//         ? "شريحة" 
+//         : type === "dishes" 
+//         ? "طبق مميز" 
+//         : type === "offers" 
+//         ? "عرض" 
+//         : "تصنيف";
 
 //     return `${action} ${itemType}`;
 //   };
@@ -334,6 +370,56 @@
 //             </div>
 //           </>
 //         );
+
+//       case "categories":
+//         return (
+//           <>
+//             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+//               <div>
+//                 <label className="block text-white font-medium mb-2">
+//                   الاسم بالعربية
+//                 </label>
+//                 <input
+//                   type="text"
+//                   value={formData.name_ar}
+//                   onChange={(e) =>
+//                     setFormData({ ...formData, name_ar: e.target.value })
+//                   }
+//                   className="w-full bg-zinc-800 border border-[#C49A6C]/30 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#C49A6C] transition-colors"
+//                   placeholder="أدخل الاسم بالعربية"
+//                   required
+//                 />
+//               </div>
+//               <div>
+//                 <label className="block text-white font-medium mb-2">
+//                   الاسم بالإنجليزية
+//                 </label>
+//                 <input
+//                   type="text"
+//                   value={formData.name_en}
+//                   onChange={(e) =>
+//                     setFormData({ ...formData, name_en: e.target.value })
+//                   }
+//                   className="w-full bg-zinc-800 border border-[#C49A6C]/30 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#C49A6C] transition-colors"
+//                   placeholder="أدخل الاسم بالإنجليزية"
+//                   required
+//                 />
+//               </div>
+//             </div>
+//             <div>
+//               <label className="block text-white font-medium mb-2">الوصف</label>
+//               <textarea
+//                 value={formData.description}
+//                 onChange={(e) =>
+//                   setFormData({ ...formData, description: e.target.value })
+//                 }
+//                 rows={3}
+//                 className="w-full bg-zinc-800 border border-[#C49A6C]/30 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#C49A6C] transition-colors"
+//                 placeholder="أدخل وصف التصنيف"
+//               />
+//             </div>
+//           </>
+//         );
 //     }
 //   };
 
@@ -452,34 +538,80 @@
 // }
 
 
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "../../../_services/adminApi";
 import toast from "react-hot-toast";
 import { X, Image as ImageIcon } from "lucide-react";
 
 export default function AddEditModal({ type, editingItem, onClose }) {
-  const [formData, setFormData] = useState({
-    title: editingItem?.title || "",
-    subtitle: editingItem?.subtitle || "",
-    description: editingItem?.description || "",
-    name: editingItem?.name || "",
-    name_ar: editingItem?.name_ar || "",
-    name_en: editingItem?.name_en || "",
-    price: editingItem?.price || "",
-    original_price: editingItem?.original_price || "",
-    button_text: editingItem?.button_text || "",
-    bg_color: editingItem?.bg_color || "",
-    details: editingItem?.details || "",
-    sort_order: editingItem?.sort_order || 0,
-    is_active:
-      editingItem?.is_active !== undefined ? editingItem?.is_active : true,
-  });
-
+  // Initialize form data based on type
+  const [formData, setFormData] = useState(() => getInitialFormData(type, editingItem));
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(editingItem?.image || editingItem?.image_url || "");
   const queryClient = useQueryClient();
+
+  // Update form data when editingItem or type changes
+  useEffect(() => {
+    setFormData(getInitialFormData(type, editingItem));
+    setImagePreview(editingItem?.image || editingItem?.image_url || "");
+  }, [type, editingItem]);
+
+  // Function to get initial form data based on type
+  function getInitialFormData(type, editingItem) {
+    switch (type) {
+      case "slides":
+        return {
+          title: editingItem?.title || "",
+          subtitle: editingItem?.subtitle || "",
+          description: editingItem?.description || "",
+          image: editingItem?.image || "",
+          button_text: editingItem?.button_text || "",
+          bg_color: editingItem?.bg_color || "",
+          sort_order: editingItem?.sort_order || 0,
+          is_active: editingItem?.is_active !== undefined ? editingItem?.is_active : true,
+        };
+      
+      case "dishes":
+        return {
+          name: editingItem?.name || "",
+          name_en: editingItem?.name_en || "",
+          price: editingItem?.price || "",
+          original_price: editingItem?.original_price || "",
+          description: editingItem?.description || "",
+          image: editingItem?.image || "",
+          rating: editingItem?.rating || 0,
+          details: editingItem?.details || "",
+          sort_order: editingItem?.sort_order || 0,
+          is_active: editingItem?.is_active !== undefined ? editingItem?.is_active : true,
+        };
+      
+      case "offers":
+        return {
+          title: editingItem?.title || "",
+          description: editingItem?.description || "",
+          price: editingItem?.price || "",
+          original_price: editingItem?.original_price || "",
+          image: editingItem?.image || "",
+          details: editingItem?.details || "",
+          sort_order: editingItem?.sort_order || 0,
+          is_active: editingItem?.is_active !== undefined ? editingItem?.is_active : true,
+        };
+      
+      case "categories":
+        return {
+          name_ar: editingItem?.name_ar || "",
+          name_en: editingItem?.name_en || "",
+          description: editingItem?.description || "",
+          image_url: editingItem?.image_url || "",
+          sort_order: editingItem?.sort_order || 0,
+          is_active: editingItem?.is_active !== undefined ? editingItem?.is_active : true,
+        };
+      
+      default:
+        return {};
+    }
+  }
 
   // Handle image upload
   const handleImageChange = (e) => {
@@ -499,6 +631,9 @@ export default function AddEditModal({ type, editingItem, onClose }) {
       toast.success("تم إضافة الشريحة بنجاح!");
       onClose();
     },
+    onError: (error) => {
+      toast.error(error.message || "حدث خطأ أثناء إضافة الشريحة");
+    },
   });
 
   const createDishMutation = useMutation({
@@ -509,6 +644,9 @@ export default function AddEditModal({ type, editingItem, onClose }) {
       toast.success("تم إضافة الطبق بنجاح!");
       onClose();
     },
+    onError: (error) => {
+      toast.error(error.message || "حدث خطأ أثناء إضافة الطبق");
+    },
   });
 
   const createOfferMutation = useMutation({
@@ -518,6 +656,9 @@ export default function AddEditModal({ type, editingItem, onClose }) {
       toast.success("تم إضافة العرض بنجاح!");
       onClose();
     },
+    onError: (error) => {
+      toast.error(error.message || "حدث خطأ أثناء إضافة العرض");
+    },
   });
 
   const createCategoryMutation = useMutation({
@@ -526,6 +667,9 @@ export default function AddEditModal({ type, editingItem, onClose }) {
       queryClient.invalidateQueries(["categories"]);
       toast.success("تم إضافة التصنيف بنجاح!");
       onClose();
+    },
+    onError: (error) => {
+      toast.error(error.message || "حدث خطأ أثناء إضافة التصنيف");
     },
   });
 
@@ -538,6 +682,9 @@ export default function AddEditModal({ type, editingItem, onClose }) {
       toast.success("تم تحديث الشريحة بنجاح!");
       onClose();
     },
+    onError: (error) => {
+      toast.error(error.message || "حدث خطأ أثناء تحديث الشريحة");
+    },
   });
 
   const updateDishMutation = useMutation({
@@ -547,6 +694,9 @@ export default function AddEditModal({ type, editingItem, onClose }) {
       queryClient.invalidateQueries(["featured-dishes"]);
       toast.success("تم تحديث الطبق بنجاح!");
       onClose();
+    },
+    onError: (error) => {
+      toast.error(error.message || "حدث خطأ أثناء تحديث الطبق");
     },
   });
 
@@ -558,6 +708,9 @@ export default function AddEditModal({ type, editingItem, onClose }) {
       toast.success("تم تحديث العرض بنجاح!");
       onClose();
     },
+    onError: (error) => {
+      toast.error(error.message || "حدث خطأ أثناء تحديث العرض");
+    },
   });
 
   const updateCategoryMutation = useMutation({
@@ -568,10 +721,18 @@ export default function AddEditModal({ type, editingItem, onClose }) {
       toast.success("تم تحديث التصنيف بنجاح!");
       onClose();
     },
+    onError: (error) => {
+      toast.error(error.message || "حدث خطأ أثناء تحديث التصنيف");
+    },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Validate required fields based on type
+    if (!validateForm()) {
+      return;
+    }
 
     if (editingItem) {
       // Update existing item
@@ -608,6 +769,37 @@ export default function AddEditModal({ type, editingItem, onClose }) {
     }
   };
 
+  // Validate form based on type
+  const validateForm = () => {
+    switch (type) {
+      case "slides":
+        if (!formData.title.trim()) {
+          toast.error("العنوان مطلوب");
+          return false;
+        }
+        break;
+      case "dishes":
+        if (!formData.name.trim() || !formData.price.trim()) {
+          toast.error("اسم الطبق والسعر مطلوبان");
+          return false;
+        }
+        break;
+      case "offers":
+        if (!formData.title.trim() || !formData.price.trim()) {
+          toast.error("عنوان العرض والسعر مطلوبان");
+          return false;
+        }
+        break;
+      case "categories":
+        if (!formData.name_ar.trim() || !formData.name_en.trim()) {
+          toast.error("الاسم بالعربية والإنجليزية مطلوبان");
+          return false;
+        }
+        break;
+    }
+    return true;
+  };
+
   const isPending =
     createSlideMutation.isPending ||
     createDishMutation.isPending ||
@@ -639,7 +831,7 @@ export default function AddEditModal({ type, editingItem, onClose }) {
           <>
             <div>
               <label className="block text-white font-medium mb-2">
-                العنوان
+                العنوان <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -692,6 +884,22 @@ export default function AddEditModal({ type, editingItem, onClose }) {
                 placeholder="مثال: اطلب الآن"
               />
             </div>
+            <div>
+              <label className="block text-white font-medium mb-2">
+                لون الخلفية
+              </label>
+              <input
+                type="color"
+                value={formData.bg_color || "#C49A6C"}
+                onChange={(e) =>
+                  setFormData({ ...formData, bg_color: e.target.value })
+                }
+                className="w-full h-12 bg-zinc-800 border border-[#C49A6C]/30 rounded-lg cursor-pointer"
+              />
+              <div className="mt-1 text-sm text-white/60">
+                اللون الحالي: {formData.bg_color || "#C49A6C"}
+              </div>
+            </div>
           </>
         );
 
@@ -700,7 +908,7 @@ export default function AddEditModal({ type, editingItem, onClose }) {
           <>
             <div>
               <label className="block text-white font-medium mb-2">
-                اسم الطبق
+                اسم الطبق <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -713,10 +921,24 @@ export default function AddEditModal({ type, editingItem, onClose }) {
                 required
               />
             </div>
+            <div>
+              <label className="block text-white font-medium mb-2">
+                اسم الطبق بالإنجليزية
+              </label>
+              <input
+                type="text"
+                value={formData.name_en}
+                onChange={(e) =>
+                  setFormData({ ...formData, name_en: e.target.value })
+                }
+                className="w-full bg-zinc-800 border border-[#C49A6C]/30 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#C49A6C] transition-colors"
+                placeholder="أدخل اسم الطبق بالإنجليزية"
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-white font-medium mb-2">
-                  السعر
+                  السعر <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -756,6 +978,37 @@ export default function AddEditModal({ type, editingItem, onClose }) {
                 placeholder="أدخل وصف الطبق"
               />
             </div>
+            <div>
+              <label className="block text-white font-medium mb-2">
+                التفاصيل
+              </label>
+              <textarea
+                value={formData.details}
+                onChange={(e) =>
+                  setFormData({ ...formData, details: e.target.value })
+                }
+                rows={2}
+                className="w-full bg-zinc-800 border border-[#C49A6C]/30 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#C49A6C] transition-colors"
+                placeholder="أدخل تفاصيل الطبق"
+              />
+            </div>
+            <div>
+              <label className="block text-white font-medium mb-2">
+                التقييم (من 5)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="5"
+                step="0.1"
+                value={formData.rating}
+                onChange={(e) =>
+                  setFormData({ ...formData, rating: parseFloat(e.target.value) || 0 })
+                }
+                className="w-full bg-zinc-800 border border-[#C49A6C]/30 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#C49A6C] transition-colors"
+                placeholder="مثال: 4.5"
+              />
+            </div>
           </>
         );
 
@@ -764,7 +1017,7 @@ export default function AddEditModal({ type, editingItem, onClose }) {
           <>
             <div>
               <label className="block text-white font-medium mb-2">
-                عنوان العرض
+                عنوان العرض <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -777,10 +1030,22 @@ export default function AddEditModal({ type, editingItem, onClose }) {
                 required
               />
             </div>
+            <div>
+              <label className="block text-white font-medium mb-2">الوصف</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                rows={2}
+                className="w-full bg-zinc-800 border border-[#C49A6C]/30 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-[#C49A6C] transition-colors"
+                placeholder="أدخل وصف العرض"
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-white font-medium mb-2">
-                  السعر
+                  السعر <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -831,7 +1096,7 @@ export default function AddEditModal({ type, editingItem, onClose }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-white font-medium mb-2">
-                  الاسم بالعربية
+                  الاسم بالعربية <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -846,7 +1111,7 @@ export default function AddEditModal({ type, editingItem, onClose }) {
               </div>
               <div>
                 <label className="block text-white font-medium mb-2">
-                  الاسم بالإنجليزية
+                  الاسم بالإنجليزية <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -904,13 +1169,16 @@ export default function AddEditModal({ type, editingItem, onClose }) {
                   onChange={handleImageChange}
                   className="w-full bg-zinc-800 border border-[#C49A6C]/30 rounded-lg px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#C49A6C] file:text-black hover:file:bg-[#B8895A]"
                 />
+                <p className="mt-2 text-sm text-white/60">
+                  {imageFile ? `تم اختيار: ${imageFile.name}` : "لم يتم اختيار صورة"}
+                </p>
               </div>
               {imagePreview && (
                 <div className="relative flex-shrink-0">
                   <img
                     src={imagePreview}
                     alt="Preview"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border border-[#C49A6C]/30"
                   />
                 </div>
               )}
@@ -928,6 +1196,7 @@ export default function AddEditModal({ type, editingItem, onClose }) {
               </label>
               <input
                 type="number"
+                min="0"
                 value={formData.sort_order}
                 onChange={(e) =>
                   setFormData({

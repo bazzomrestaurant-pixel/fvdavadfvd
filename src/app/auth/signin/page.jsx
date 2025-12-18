@@ -44,31 +44,8 @@ export default function SignInPage() {
     <div className="min-h-screen bg-black text-white pt-16 pb-12 px-4">
       <Toaster position="top-center" />
       
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
-            <div className="flex items-center justify-center gap-3">
-              <Image
-                src="/logo.png"
-                alt="Bazzom Logo"
-                width={48}
-                height={48}
-                className="rounded-lg"
-              />
-              <div>
-                <div className="text-2xl font-bold text-[#C49A6C]">Bazzom</div>
-                <div className="text-xs text-white/60">الطعم الأصيل</div>
-              </div>
-            </div>
-          </Link>
-          <h1 className="text-2xl font-bold text-[#C49A6C] mb-2">
-            تسجيل الدخول
-          </h1>
-          <p className="text-white/60 text-sm">
-            سجل دخولك باستخدام حساب جوجل للمتابعة
-          </p>
-        </div>
+      <div className="max-w-md mx-auto mt-8">
+        
 
         {/* Login Card */}
         <motion.div

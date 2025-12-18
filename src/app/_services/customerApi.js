@@ -1,3 +1,5 @@
+
+
 // // ملف: app/_services/customerApi.js
 // import { supabase } from "./supabase";
 
@@ -118,7 +120,7 @@
 //     }
 //   },
 
-//   // ===== تحديث الملف الشخصي =====
+//   // ===== تحديث الملف الشخصي - تم الإصلاح =====
 //   updateProfile: async (updates) => {
 //     try {
 //       const customerId = localStorage.getItem("customerId");
@@ -127,7 +129,8 @@
 //       const { data, error } = await supabase
 //         .from("customers")
 //         .update({
-//           ...updates,
+//           name: updates.name || "",
+//           phone: updates.phone || "",
 //           updated_at: new Date().toISOString(),
 //         })
 //         .eq("id", customerId)
@@ -136,17 +139,17 @@
 
 //       if (error) throw error;
 
-//       // تحديث localStorage
-//       const current = JSON.parse(
+//       // تحديث localStorage بشكل كامل
+//       const currentData = JSON.parse(
 //         localStorage.getItem(CUSTOMER_STORAGE_KEY) || "{}"
 //       );
-//       localStorage.setItem(
-//         CUSTOMER_STORAGE_KEY,
-//         JSON.stringify({
-//           ...current,
-//           ...updates,
-//         })
-//       );
+//       const updatedData = {
+//         ...currentData,
+//         name: updates.name || currentData.name,
+//         phone: updates.phone || currentData.phone,
+//       };
+      
+//       localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify(updatedData));
 
 //       return data;
 //     } catch (error) {
@@ -526,6 +529,25 @@ import { supabase } from "./supabase";
 const CUSTOMER_STORAGE_KEY = "bazzom_customer";
 
 export const customerApi = {
+  isCustomerOnly: () => {
+    try {
+      // التحقق من أن المستخدم عميل وليس موظفاً
+      const isCustomer = customerApi.isAuthenticated();
+      if (!isCustomer) return false;
+
+      // التحقق من أن ليس لديه صلاحيات موظف
+      const adminAuth = localStorage.getItem("adminAuthenticated");
+      const userRole = localStorage.getItem("userRole");
+
+      const isEmployee =
+        !!adminAuth && ["admin", "cashier", "chief"].includes(userRole);
+
+      // إذا كان موظفاً، فهو ليس عميلاً فقط
+      return !isEmployee;
+    } catch (error) {
+      return false;
+    }
+  },
   // ===== تسجيل الدخول بحساب جوجل =====
   signInWithGoogle: async () => {
     try {
@@ -668,7 +690,7 @@ export const customerApi = {
         name: updates.name || currentData.name,
         phone: updates.phone || currentData.phone,
       };
-      
+
       localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify(updatedData));
 
       return data;
@@ -967,6 +989,70 @@ export const customerApi = {
 
   getCustomerId: () => {
     return localStorage.getItem("customerId") || "";
+  },
+
+  // دالة جديدة: الحصول على توكن المصادقة
+  getToken: async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      console.log("Session data:", session ? "Session exists" : "No session");
+      return session?.access_token || null;
+    } catch (error) {
+      console.error("❌ Get token error:", error);
+
+      // محاولة الحصول من localStorage
+      try {
+        const authData = localStorage.getItem("supabase.auth.token");
+        if (authData) {
+          const parsed = JSON.parse(authData);
+          console.log(
+            "Token from localStorage:",
+            parsed?.currentSession?.access_token ? "Exists" : "Not found"
+          );
+          return parsed?.currentSession?.access_token || null;
+        }
+      } catch (e) {
+        console.error("Error parsing localStorage token:", e);
+      }
+
+      return null;
+    }
+  },
+
+  isValidToken: async () => {
+    try {
+      const token = await customerApi.getToken();
+      if (!token) return false;
+
+      // التحقق من الصلاحية مع Supabase
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser(token);
+      return !error && !!user;
+    } catch (error) {
+      console.error("Token validation error:", error);
+      return false;
+    }
+  },
+
+  // دالة جديدة: إعادة المصادقة إذا انتهت الجلسة
+  refreshSessionIfNeeded: async () => {
+    try {
+      const isValid = await customerApi.isValidToken();
+      if (!isValid) {
+        console.log("Session expired, attempting to refresh...");
+        const { data, error } = await supabase.auth.refreshSession();
+        if (error) throw error;
+        return data.session?.access_token;
+      }
+      return await customerApi.getToken();
+    } catch (error) {
+      console.error("Session refresh error:", error);
+      return null;
+    }
   },
 
   getCustomerName: () => {

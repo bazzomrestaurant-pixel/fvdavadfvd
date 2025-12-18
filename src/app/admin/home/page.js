@@ -1,3 +1,5 @@
+
+
 // "use client";
 // import { useEffect, useState } from "react";
 // import { useRouter } from "next/navigation";
@@ -41,6 +43,12 @@
 //   const { data: offers = [], isLoading: offersLoading } = useQuery({
 //     queryKey: ["offers"],
 //     queryFn: adminApi.offers.getOffers,
+//     enabled: isAuthenticated,
+//   });
+
+//   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+//     queryKey: ["categories"],
+//     queryFn: adminApi.categories.getCategories,
 //     enabled: isAuthenticated,
 //   });
 
@@ -89,6 +97,12 @@
 //           loading: offersLoading,
 //           columns: ["العنوان", "السعر", "الحالة"],
 //         };
+//       case "categories":
+//         return {
+//           data: categories,
+//           loading: categoriesLoading,
+//           columns: ["الاسم العربي", "الاسم الإنجليزي", "الحالة"],
+//         };
 //       default:
 //         return { data: [], loading: false, columns: [] };
 //     }
@@ -124,6 +138,7 @@
 //             { id: "slides", label: "الشرائح" },
 //             { id: "dishes", label: "الأطباق المميزة" },
 //             { id: "offers", label: "العروض" },
+//             { id: "categories", label: "التصنيفات" }, // تمت الإضافة
 //           ]}
 //         />
 
@@ -150,7 +165,6 @@
 // }
 
 
-
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -164,18 +178,32 @@ import { adminApi } from "../../_services/adminApi";
 
 export default function AdminHomeControl() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState("");
   const [activeTab, setActiveTab] = useState("slides");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
-    const auth = localStorage.getItem("adminAuthenticated");
-    if (!auth) {
-      router.push("/admin/login");
-    } else {
+    const checkAuth = async () => {
+      const isAuth = await adminApi.auth.checkAuth();
+      if (!isAuth) {
+        router.push("/admin/login");
+        return;
+      }
+
+      const role = adminApi.auth.getCurrentRole();
+      if (!role || role !== "admin") {
+        toast.error("غير مصرح لك بالوصول إلى هذه الصفحة");
+        router.push("/admin/dashboard");
+        return;
+      }
+
+      setUserRole(role);
       setIsAuthenticated(true);
-    }
+    };
+
+    checkAuth();
   }, [router]);
 
   // Fetch data using React Query
@@ -224,6 +252,14 @@ export default function AdminHomeControl() {
         {" "}
         {/* Added pt-16 here */}
         <div className="text-[#C49A6C] text-xl">جارٍ التحقق من الهوية...</div>
+      </div>
+    );
+  }
+
+  if (userRole !== "admin") {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center pt-16">
+        <div className="text-red-500 text-xl">غير مصرح لك بالوصول إلى هذه الصفحة</div>
       </div>
     );
   }
@@ -279,7 +315,7 @@ export default function AdminHomeControl() {
       <Header
         title="إدارة الصفحة الرئيسية"
         subtitle="إدارة محتوى الصفحة الرئيسية"
-        backUrl="/admin"
+        backUrl="/admin/dashboard"
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <TabsNavigation
