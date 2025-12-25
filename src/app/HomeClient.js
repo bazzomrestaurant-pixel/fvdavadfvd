@@ -4,20 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   CreditCard,
-  Phone,
-  Mail,
-  MapPin,
-  WheatIcon,
-  Star,
   Clock,
-  Users,
-  Facebook,
-  Instagram,
-  Twitter,
-  X,
-  Plus,
-  Minus,
-  ShoppingCart,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useApp } from "./layout-client";
