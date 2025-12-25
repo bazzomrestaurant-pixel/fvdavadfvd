@@ -2,6 +2,10 @@ import HomeClient from "./HomeClient";
 import supabase from "./_services/supabase";
 
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+
 export const metadata = {
   title: "مطعم بزوم | Bazzom Restaurant",
   description:
