@@ -3,6 +3,10 @@ import supabase from "./_services/supabase";
 
 export const revalidate = 120;
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+
 export const metadata = {
   title: "مطعم بزوم | Bazzom Restaurant",
   description:
