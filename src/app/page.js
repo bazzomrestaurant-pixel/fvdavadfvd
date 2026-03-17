@@ -1,6 +1,7 @@
 import HomeClient from "./HomeClient";
 import supabase from "./_services/supabase";
 
+export const revalidate = 120;
 
 export const metadata = {
   title: "مطعم بزوم | Bazzom Restaurant",
@@ -9,36 +10,46 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const { data: slides, error : slideError } = await supabase
-    .from("home_slides")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
-
-  const { data: categories, error: categoriesError } = await supabase
-    .from("categories")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
-
-  const { data: featuredDishes, error: featuredDishesError } = await supabase
-    .from("featured_dishes")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
-
-  const { data: offers, error: offersError } = await supabase
-    .from("offers")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+  const [
+    { data: slides, error: slideError },
+    { data: categories, error: categoriesError },
+    { data: featuredDishes, error: featuredDishesError },
+    { data: offers, error: offersError },
+    { data: menuItems, error: menuItemsError },
+  ] = await Promise.all([
+    supabase
+      .from("home_slides")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("categories")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("featured_dishes")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("offers")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("menu_items")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .limit(6),
+  ]);
 
   if (slideError) console.error(slideError);
   if (categoriesError) console.error(categoriesError);
   if (featuredDishesError) console.error(featuredDishesError);
   if (offersError) console.error(offersError);
-
-
+  if (menuItemsError) console.error(menuItemsError);
 
   return (
     <HomeClient
@@ -46,9 +57,7 @@ export default async function Home() {
       categories={categories}
       featuredDishes={featuredDishes}
       offers={offers}
+      menuItems={menuItems}
     />
   );
 }
-
-
-

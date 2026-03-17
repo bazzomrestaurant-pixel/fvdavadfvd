@@ -7,6 +7,7 @@ import Navigation from "../app/_components/Navigation";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
+import { usePathname } from "next/navigation";
 
 const tajawal = Tajawal({
   subsets: ["latin"],
@@ -37,9 +38,12 @@ export default function ClientLayout({ children }) {
             refetchOnWindowFocus: false,
           },
         },
-      })
+      }),
   );
   const [cart, setCart] = useState([]);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceChecked, setMaintenanceChecked] = useState(false);
+  const pathname = usePathname();
 
   const addToCart = (item) => {
     setCart((prevCart) => {
@@ -51,7 +55,7 @@ export default function ClientLayout({ children }) {
         const existingItemWithSameSize = prevCart.find(
           (cartItem) =>
             cartItem.id === item.id &&
-            cartItem.selectedSize === item.selectedSize
+            cartItem.selectedSize === item.selectedSize,
         );
 
         if (existingItemWithSameSize) {
@@ -65,14 +69,14 @@ export default function ClientLayout({ children }) {
                   calculatedPrice:
                     (cartItem.calculatedPrice ||
                       parseFloat(
-                        cartItem.price.toString().replace(/[^0-9.]/g, "")
+                        cartItem.price.toString().replace(/[^0-9.]/g, ""),
                       )) +
                     (item.calculatedPrice ||
                       parseFloat(
-                        item.price.toString().replace(/[^0-9.]/g, "")
+                        item.price.toString().replace(/[^0-9.]/g, ""),
                       ) * (item.quantity || 1)),
                 }
-              : cartItem
+              : cartItem,
           );
         } else {
           // إضافة عنصر جديد بحجم مختلف
@@ -100,11 +104,11 @@ export default function ClientLayout({ children }) {
                     ? cartItem.calculatedPrice +
                       (item.calculatedPrice ||
                         parseFloat(
-                          item.price.toString().replace(/[^0-9.]/g, "")
+                          item.price.toString().replace(/[^0-9.]/g, ""),
                         ) * (item.quantity || 1))
                     : null,
                 }
-              : cartItem
+              : cartItem,
           );
         } else {
           return [
@@ -130,15 +134,15 @@ export default function ClientLayout({ children }) {
     } else {
       setCart((prevCart) =>
         prevCart.map((item) =>
-          item.id === itemId ? { ...item, quantity: newQuantity } : item
-        )
+          item.id === itemId ? { ...item, quantity: newQuantity } : item,
+        ),
       );
     }
   };
 
   const getTotalPrice = () => {
     return cart.reduce((total, item) => {
-      const price = parseInt(item.price.replace(/[^0-9]/g, ""));
+      const price = parseInt(item.price.toString().replace(/[^0-9]/g, ""));
       return total + price * item.quantity;
     }, 0);
   };
@@ -152,15 +156,60 @@ export default function ClientLayout({ children }) {
     setCart,
   };
 
+  useEffect(() => {
+    const loadMaintenance = async () => {
+      try {
+        const response = await fetch("/api/public/maintenance", {
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          throw new Error("Failed to load maintenance");
+        }
+        const data = await response.json();
+        setMaintenanceMode(data?.maintenanceMode === true);
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+        setMaintenanceMode(false);
+      } finally {
+        setMaintenanceChecked(true);
+      }
+    };
+
+    loadMaintenance();
+  }, []);
+
+  const isAdminPath = pathname?.startsWith("/admin");
+  const showMaintenance = maintenanceMode && !isAdminPath;
+
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" >
       <body className={tajawal.className}>
         <QueryClientProvider client={queryClient}>
           <ReactQueryDevtools initialIsOpen={false} />
           <AppContext.Provider value={value}>
             <div className="font-['Tajawal'] bg-black min-h-screen">
-              <Navigation />
-              <AnimatePresence mode="wait">{children}</AnimatePresence>
+              {!maintenanceChecked ? (
+                <div className="min-h-screen flex items-center justify-center text-[#C49A6C] text-xl">
+                  جارٍ التحميل...
+                </div>
+              ) : showMaintenance ? (
+                <div className="min-h-screen flex items-center justify-center px-6 text-center">
+                  <div className="max-w-xl bg-zinc-900 border border-[#C49A6C]/30 rounded-2xl p-8">
+                    <div className="text-4xl mb-4">🔧</div>
+                    <h1 className="text-2xl font-bold text-[#C49A6C] mb-3">
+                      الموقع تحت الصيانة
+                    </h1>
+                    <p className="text-white/70 leading-relaxed">
+                      نعمل حالياً على بعض التحسينات. يرجى المحاولة لاحقاً.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Navigation />
+                  <AnimatePresence mode="wait">{children}</AnimatePresence>
+                </>
+              )}
             </div>
           </AppContext.Provider>
         </QueryClientProvider>

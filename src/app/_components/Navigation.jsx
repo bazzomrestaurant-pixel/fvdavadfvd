@@ -781,7 +781,7 @@ import { usePathname } from 'next/navigation';
 import { useApp } from '../layout-client';
 import Image from 'next/image';
 import { customerApi } from '../_services/customerApi';
-import { authApi } from '../_services/adminApi';
+import { authService } from '../_services/auth.service';
 import { supabase } from '../_services/supabase';
 
 const CUSTOMER_STORAGE_KEY = "bazzom_customer";
@@ -969,7 +969,7 @@ const Navigation = () => {
       { key: 'home', label: 'الرئيسية', icon: HomeIcon, path: '/', show: true },
       { key: 'menu', label: 'القائمة', icon: Utensils, path: '/menu', show: true },
       { key: 'about', label: 'عن المطعم', icon: Users, path: '/about', show: true },
-      { key: 'reviews', label: 'التقييمات', icon: MessageSquare, path: '/reviews', show: true },
+      // { key: 'reviews', label: 'التقييمات', icon: MessageSquare, path: '/reviews', show: true },
     ];
 
     // عناصر خاصة بالموظفين فقط (لا تظهر للعملاء)
@@ -1012,7 +1012,7 @@ const Navigation = () => {
 
   const handleAdminLogout = async () => {
     try {
-      await authApi.logout();
+      await authService.logout();
       await updateUserStatus();
       setAccountMenuOpen(false);
       setMobileMenuOpen(false);
