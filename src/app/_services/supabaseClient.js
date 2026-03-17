@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
  * This ensures errors only occur at runtime if env vars are missing,
  * not during build time.
  */
-function createLazySupabaseClient(urlVar, keyVar, options = {}) {
+function createLazySupabaseClient(url, key, options = {}) {
   let client = null;
 
   return new Proxy(
@@ -13,12 +13,9 @@ function createLazySupabaseClient(urlVar, keyVar, options = {}) {
     {
       get(target, prop) {
         if (!client) {
-          const url = process.env[urlVar];
-          const key = process.env[keyVar];
-
           if (!url || !key) {
             throw new Error(
-              `Missing Supabase environment variables: ${urlVar} or ${keyVar}`,
+              "Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY",
             );
           }
 
